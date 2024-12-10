@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Addition Form</title>
+</head>
+<body>
+    <h2>Addition Form</h2>
+    
+    <form method="POST" action="/arithmetic/addData/">
+
+        <label for="txtUserName">Enter user name:</label>
+        <input type="text" name="userName" id="txtUserName" value="{{ request.POST.username }}" required> 
+        
+        <label for="txtEmailID">Enter email id:</label>
+        <input type="text" name="emailID" id="txtEmailID" value="{{ request.POST.emailID }}" required> 
+        
+
+        <label for="txtPhoneNo">Enter phone :</label>
+        <input type="text" name="phoneNo" id="txtPhoneNo" value="{{ request.POST.phoneNo }}" required> 
+        
+        <button type="submit">Add</button>
+    </form>
+
+    {% if result %}
+        <h3>Result: {{ result }}</h3>
+    {% elif error %}
+        <h3 style="color:red;">Error: {{ error }}</h3>
+    {% endif %}
+</body>
+</html>
