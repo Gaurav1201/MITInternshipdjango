@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Addition Form</title>
+</head>
+<body>
+    <h2>Employee Form</h2>
+    
+    <form method="POST" action="/arithmetic/employeeData/">
+
+        <div class="mb-3">
+            <select>
+            <option>
+                Emp1
+            </option>
+            <option>Emp2</option>
+        </select>
+        </div>
+        <div class="mb-3">
+            <label for="emp_doj" class="form-label">Enter date of joining:</label>
+            <input type="date" name="emp_doj" id="dt_emp_doj" class="form-control" value="{{ request.POST.emp_doj }}" required>
+        </div>
+
+        <button type="submit">Add</button>
+    </form>
+
+    {% if result %}
+        <h3>Result: {{ result }}</h3>
+    {% elif error %}
+        <h3 style="color:red;">Error: {{ error }}</h3>
+    {% endif %}
+</body>
+</html>
