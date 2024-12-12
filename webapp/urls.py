@@ -9,5 +9,5 @@ urlpatterns = [
 
     path('getcourselist/', views.getCourseList, name='getCourseList'),
     path('getlessonplan/', views.getLessonPlan, name='getLessonPlan'),
-    path('uploadstudentlist/', views.uploadStudentList, name='uploadStudentList')
+    path('uploadfacultylist/', views.uploadFacultyList, name='uploadFacultyList')
 ]

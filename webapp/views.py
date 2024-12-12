@@ -1,11 +1,13 @@
 from django.shortcuts import render
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-# from .models import tb_users
+from .models import tb_student, tb_faculty
 from datetime import datetime
 from django.utils import timezone
 from django.db import connection
 from rest_framework import status
+import pandas as pd
+
 @api_view( ['GET','POST'])
 def add(request):
     print("11111111111111")
@@ -256,77 +258,55 @@ def getLessonPlan(request):
             "result": False,
             "message": f"An error occurred: {str(e)}"
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
 
+@api_view(['GET', 'POST'])
+def uploadFacultyList(request):
+    if request.method == 'POST':
+        try:
+            # Get the uploaded file
+            excel_file = request.FILES['file']
+            print(excel_file)
 
+            # Check if the file has the correct extension
+            if not excel_file.name.endswith('.xlsx') and not excel_file.name.endswith('.xls'):
+                return render(request, 'webapp/facultyExcelUpload.html', {
+                    "result": False,
+                    "message": "File not proper"
+                })
 
-@api_view(['POST'])
-def uploadStudentList(request):
-    try:
-        # Extract parameters from the GET request query parameters
-        
-        academic_year = request.data.get('academic_year')
-        programme_name = request.data.get('programme_name')
-        student_list = []
-        # Check if both parameters are provided
-        if not academic_year or not programme_name:
-            return Response({
-                "result": False,
-                "message": "Both academic_year and programme_year are required."
-            }, status=status.HTTP_400_BAD_REQUEST)
+            # Use pandas to read the Excel file (openpyxl is used under the hood)
+            df = pd.read_excel(excel_file)
+            print(df)
 
-        if 'file' not in request.FILES:
-             return Response({
-                "result": False,
-                "message": "File not attached."
-            }, status=status.HTTP_400_BAD_REQUEST)
-        
+            # Loop through the rows of the DataFrame and save to the database
+            for index, row in df.iterrows():
+                # Extract data from the row
+                seniority = row.get('Sl.No')
+                id = row.get('ID')
+                faculty_name = row.get('Name of the Faculty', '')  # Default empty string if not present
+                faculty_designation = row.get('Designation', '')  # Default empty string if not present
 
-        # Get the uploaded file
-        excel_file = request.FILES.get('file')
-        if excel_file:
-            try:
-                workbook = openpyxl.load_workbook(excel_file)
-                sheet = workbook.active
-                for i, row in enumerate(sheet.iter_rows(min_row = 2, values_only = True)):
-                    roll_no, name = row
-            except Exception as e:
-                print("1")
-        query = """
-            SELECT id, lesson_id, description, course_no, course_id
-            FROM tb_lesson_plan
-            WHERE course_id = %s AND academic_year = %s
-        """
+                # Create a new student record in the database
+                tb_faculty.objects.create(
+                    seniority=seniority,
+                    faculty_id=id,
+                    faculty_name=faculty_name,
+                    faculty_password="Manipal@123",
+                    role_id=1,
+                    designation = faculty_designation
+                )
 
-        # Execute the query using the database connection
-        with connection.cursor() as cursor:
-            cursor.execute(query, [course_id, academic_year])
-            rows = cursor.fetchall()
-
-        # Prepare the response data
-        lesson_plan = []
-        for row in rows:
-            lesson_plan.append({
-                'id': row[0],
-                'lesson_id': row[1],
-                'description': row[2],
-                'course_no': row[3],
-                'course_id': row[4],
+            return render(request, 'webapp/facultyExcelUpload.html', {
+                "result": True,
+                "message": "Data successfully uploaded!"
             })
 
-        # Return the response with the fetched data
-        result = {
-            "result": True,
-            "message": "Fetched successfully",
-            "lesson_plan": lesson_plan
-        }
-
-        return Response(result, status=status.HTTP_200_OK)
-
-    except Exception as e:
-        # Catch any exception and return a server error message
-        return Response({
-            "result": False,
-            "message": f"An error occurred: {str(e)}"
-        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-
+        except Exception as e:
+            print(f"Error: {e}")
+            return render(request, 'webapp/facultyExcelUpload.html', {
+                "result": False,
+                "message": "Error occurred while uploading the file."
+            })
+    else:
+        return render(request, 'webapp/facultyExcelUpload.html')

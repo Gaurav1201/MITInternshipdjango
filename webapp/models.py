@@ -30,10 +30,12 @@ class tb_roles(models.Model):
         return self.role_name or "No Name"
 
 class tb_faculty(models.Model):
-    faculty_id = models.AutoField(primary_key=True)
-    faculty_name = models.CharField(max_length=255)
-    faculty_password = models.CharField(max_length=50)
+    seniority = models.IntegerField(null=False)
+    faculty_id = models.CharField(max_length=45, primary_key=True)
+    faculty_name = models.CharField(max_length=255, null=False)
+    faculty_password = models.CharField(max_length=50, null=False)
     role_id = models.IntegerField()  # Storing role_id as an integer, no foreign key
+    designation = models.CharField(max_length=45, null=False)
 
     class Meta:
         db_table = 'tb_faculty'  # The table name in MySQL
@@ -67,3 +69,23 @@ class tb_lesson_plan(models.Model):
     def __str__(self):
         return f"Lesson Plan {self.lesson_id} for Course {self.course_id}"
 
+class tb_student(models.Model):
+    student_id = models.CharField(max_length=10, primary_key=True)  # `student_id` as varchar(10)
+    student_name = models.CharField(max_length=255)
+    student_programme = models.CharField(max_length=45)
+    student_branch = models.CharField(max_length=45)
+
+    class Meta:
+        db_table = 'tb_student'  # Table name in MySQL
+
+    def __str__(self):
+        return self.student_name
+    
+class tb_AssessmentPlan(models.Model):
+    component = models.CharField(max_length=50, primary_key=True)
+    mid_sem_exam = models.TextField(null=True, blank=True)
+    flexible_assessments = models.TextField(null=True, blank=True)
+    end_semester_exam = models.TextField(null=True, blank=True)
+
+    class Meta:
+        db_table = 'tb_AssessmentPlan'  # The table name in MySQL
