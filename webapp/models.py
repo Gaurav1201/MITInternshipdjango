@@ -45,12 +45,9 @@ class tb_faculty(models.Model):
 
 
 class tb_course(models.Model):
-    course_id = models.AutoField(primary_key=True)
+    course_code = models.CharField(max_length=45,primary_key=True,default='DEFAULT_CODE')
     course_name = models.CharField(max_length=255)
-    academic_year = models.IntegerField()
-    faculty_id = models.IntegerField(null=True, blank=True)  # faculty_id as IntegerField
-    course_number = models.CharField(max_length=45, null=True, blank=True)  # Added course_number field
-
+    
     class Meta:
         db_table = 'tb_course'  # The table name in MySQL
 
@@ -80,6 +77,21 @@ class tb_student(models.Model):
 
     def __str__(self):
         return self.student_name
+    
+
+
+class tb_course_faculty_mapping(models.Model):
+    course_code = models.CharField(max_length=45, primary_key=False)  
+    faculty_id = models.CharField(max_length=45)
+    academic_year = models.IntegerField()
+   
+    class Meta:
+        db_table = 'tb_course_faculty_mapping'  # Table name in MySQL
+
+    def __str__(self):
+        return self.student_name
+    
+
     
 class tb_AssessmentPlan(models.Model):
     component = models.CharField(max_length=50, primary_key=True)

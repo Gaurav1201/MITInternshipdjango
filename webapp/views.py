@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from .models import tb_student, tb_faculty
+from .models import tb_student, tb_faculty, tb_course_faculty_mapping
 from datetime import datetime
 from django.utils import timezone
 from django.db import connection
@@ -310,3 +310,66 @@ def uploadFacultyList(request):
             })
     else:
         return render(request, 'webapp/facultyExcelUpload.html')
+    
+
+
+@api_view(['GET', 'POST'])
+def uploadCourseFacultyMapping(request):
+    if request.method == 'POST':
+        try:
+            # POST Data
+            academic_year = request.data.get('academic_year')
+            # Get the uploaded file
+            excel_file = request.FILES['file']
+            print(excel_file)
+
+            # Check if the file has the correct extension
+            if not excel_file.name.endswith('.xlsx') and not excel_file.name.endswith('.xls'):
+                return render(request, 'webapp/courseFacultyMaping.html', {
+                    "result": False,
+                    "message": "File not proper"
+                })
+
+          
+            df = pd.read_excel(excel_file)
+            print(df)
+
+
+           # df = pd.read_excel('your_file.xlsx', header=None)
+
+            # Initialize an empty list to store the rows as nested arrays
+            nested_array = []
+
+            # Iterate through each row and extract all column data as a list
+            for index, row in df.iterrows():
+                row_data = row.tolist()  # Convert the row (Series) to a list
+                nested_array.append(row_data)
+            
+
+            for i in range(0, len(nested_array)):
+                for j in range (1,len(nested_array[i])):
+                    faculty_id = nested_array[i][0]
+                    course_code = nested_array[i][j]
+                    if pd.isna(course_code) or pd.isna(faculty_id):
+                         continue  
+                    tb_course_faculty_mapping.objects.create(
+                    course_code = course_code,
+                    faculty_id=faculty_id,
+                    academic_year = 2425
+                )
+            # Loop through the rows of the DataFrame and save to the database
+            
+
+            return render(request, 'webapp/courseFacultyMaping.html', {
+                "result": True,
+                "message": "Data successfully uploaded!"
+            })
+
+        except Exception as e:
+            print(f"Error: {e}")
+            return render(request, 'webapp/courseFacultyMaping.html', {
+                "result": False,
+                "message": "Error occurred while uploading the file."
+            })
+    else:
+        return render(request, 'webapp/courseFacultyMaping.html')
