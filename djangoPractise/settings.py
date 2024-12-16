@@ -98,7 +98,8 @@ DATABASES = {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'internshipDB',
         'USER': 'root',
-        'PASSWORD': 'Manipal@123',
+         'PASSWORD': 'StrongPassword',
+       # 'PASSWORD': 'Manipal@123',
         'HOST': 'localhost',
         'PORT': '3306',
     }
