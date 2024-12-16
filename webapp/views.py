@@ -313,6 +313,49 @@ def uploadFacultyList(request):
     
 
 
+
+
+@api_view(['GET'])
+def getFacultyList(request):
+    try:
+        
+        # SQL query to fetch course details
+        query = """
+            SELECT faculty_id, faculty_name, designation
+            FROM tb_faculty
+            ORDER BY seniority
+        """
+
+        # Execute the query using the database connection
+        with connection.cursor() as cursor:
+            cursor.execute(query)
+            rows = cursor.fetchall()
+
+        # Prepare the response data
+        faculty_list = []
+        for row in rows:
+            faculty_list.append({
+                'faculty_id': row[0],
+                'faculty_name': row[1],
+                'designation': row[2]
+            })
+
+        # Response structure
+        result = {
+            "result": True,
+            "message": "Fetched successfully",
+            "faculty_list": faculty_list
+        }
+
+        return Response(result, status=status.HTTP_200_OK)
+
+    except Exception as e:
+        # Catch any exception and return a server error message
+        return Response({
+            "result": False,
+            "message": f"An error occurred: {str(e)}"
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 @api_view(['GET', 'POST'])
 def uploadCourseFacultyMapping(request):
     if request.method == 'POST':
@@ -373,3 +416,71 @@ def uploadCourseFacultyMapping(request):
             })
     else:
         return render(request, 'webapp/courseFacultyMaping.html')
+    
+@api_view(['POST'])
+def addFacultyRow(request):
+    if request.method == 'POST':
+        try:
+            # Extract form data from the POST request
+            seniority = request.POST.get('seniority', None)
+            faculty_id = request.POST.get('facultyID', None)
+            faculty_name = request.POST.get('facultyName', None)
+            designation = request.POST.get('designation', None)
+            # Assuming faculty is non-admin
+            role = 2
+
+            # Ensure all fields are provided
+            if not all([faculty_id, faculty_name, designation]):
+                return Response({
+                    "result": False,
+                    "message": "All fields (Faculty ID, Name, Designation) are required."
+                })
+
+            # Query to get the max seniority value
+            query_seniority = "SELECT MAX(seniority) FROM tb_faculty"
+            
+            # Execute the query to get the current max seniority
+            with connection.cursor() as cursor:
+                cursor.execute(query_seniority)
+                rows = cursor.fetchall()
+
+            # Ensure we have a result from the query
+            if rows and rows[0][0] is not None:
+                max_seniority = int(rows[0][0])
+            else:
+                max_seniority = 0  # If no records exist, max seniority would be 0
+
+            # Check if the seniority value is within acceptable range
+            if int(seniority) > max_seniority + 1:
+                return Response({
+                    "result": False,
+                    "message": f"Seniority can be at max {max_seniority + 1}!"
+                })
+            
+            # Update the seniority of existing faculty records if necessary
+            query_update_seniority = "UPDATE tb_faculty SET seniority = seniority + 1 WHERE seniority >= %s"
+            with connection.cursor() as cursor:
+                cursor.execute(query_update_seniority, [int(seniority)])
+
+            # Create a new faculty record in the database
+            tb_faculty.objects.create(
+                seniority=seniority,
+                faculty_id=faculty_id,
+                faculty_name=faculty_name,
+                faculty_password="Manipal@123",  # Default password 
+                role_id=role,  # Assuming role_id is 2 for non-admin faculty
+                designation=designation
+            )
+
+            # Return success response
+            return Response({
+                "result": True,
+                "message": "Faculty member added successfully!"
+            })
+        except Exception as e:
+            # Log and return error response
+            print(f"Error: {e}")
+            return Response({
+                "result": False,
+                "message": "An error occurred while adding the faculty member."
+            })

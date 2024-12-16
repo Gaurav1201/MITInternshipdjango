@@ -2,13 +2,11 @@
 <html lang="en">
 
 <head>
-
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <meta name="description" content="">
     <meta name="author" content="">
-
     <title>Course</title>
 
     <!-- Custom fonts for this template-->
@@ -41,7 +39,6 @@
             content: "Browse";
         }
     </style>
-
 </head>
 
 <body>
@@ -57,13 +54,6 @@
                             <div class="col-12 col-md-6">
                                 <h4>Faculty List Upload</h4>
                             </div>
-                            <div class="col-12 col-md-6">
-                                <a href="/E_coreweb/Forms/Masters/StudentMasterList.html" 
-                                   style="float: right !important;" 
-                                   class="btn btn-outline-success">
-                                    LIST VIEW
-                                </a>
-                            </div>
                         </div>
                     </div>
 
@@ -71,13 +61,13 @@
                         <div class="row">
                             <!-- Faculty ID -->
                             <div class="col-12 col-md-4 mb-3">
-                                <label class="title">ID<span style="color:red">*</span></label>
+                                <label class="title">ID</label>
                                 <input type="text" autocomplete="off" class="form-control" name="FacultyID" id="txtFacultyID" placeholder="Enter ID" required>
                             </div>
 
                             <!-- Faculty Name -->
                             <div class="col-12 col-md-4 mb-3">
-                                <label class="title">Name<span style="color:red;font-size: 12px;"></span></label>
+                                <label class="title">Name</label>
                                 <input type="text" autocomplete="off" class="form-control" name="Name" id="txtName" placeholder="Enter Name">
                             </div>
 
@@ -90,7 +80,7 @@
                         <!-- Faculty Excel Upload Section -->
                         <div class="row mt-4">
                             <div class="col-12 col-md-12 mb-3">
-                                <label class="title">Upload Faculty Excel File<span style="color:red">*</span></label>
+                                <label class="title">Upload Faculty Excel File </label>
                                 <div class="input-group mb-3">
                                     <input type="file" class="form-control" id="fileUpload" accept=".xls, .xlsx">
                                     <button class="btn btn-outline-success" type="button" onclick="uploadExcel()">Upload</button>
@@ -113,11 +103,35 @@
             </div>
         </div>
 
+        <!-- Faculty DataTable Section -->
+        <div class="row mt-5">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h4>Faculty Data Table</h4>
+                    </div>
+                    <div class="card-body">
+                        <table id="facultyTable" class="table table-striped table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Faculty ID</th>
+                                    <th>Faculty Name</th>
+                                    <th>Designation</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Table will be populated dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
     </div>
 
     <!-- Scroll to Top Button -->
-        <i class="fas fa-angle-up"></i>
-    </a>
+    <i class="fas fa-angle-up"></i>
 
     <!-- Scripts -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -127,8 +141,41 @@
     <script src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap4.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.13.2/jquery-ui.min.js"></script>
 
-    <!-- Custom Script for File Upload -->
+    <!-- DataTable Initialization and API call -->
     <script>
+
+        function getFacultyList(){
+            var table = $('#facultyTable').DataTable();
+
+            // Call API to get faculty list
+            $.ajax({
+                url: 'http://127.0.0.1:8000/api/faculty/getfacultylist',  // Replace with your actual API URL
+                method: 'GET',
+                success: function(response) {
+                    // Assuming the response is an array of faculty objects
+                    var facultyList = response.faculty_list;  // This should be an array of faculty objects
+                    console.log(response)
+                    // Loop through the array and populate the table
+                    facultyList.forEach(function(faculty) {
+                        table.row.add([
+                            faculty.faculty_id,       // Faculty ID
+                            faculty.faculty_name,            // Faculty Name
+                            faculty.designation,      // Department
+                        ]).draw();
+                    });
+                },
+                error: function(error) {
+                    console.error('Error fetching faculty data:', error);
+                    alert('Error fetching faculty data.');
+                }
+            });
+        }
+
+        $(document).ready(function() {
+            // Initialize DataTable
+            getFacultyList();
+        });
+
         function uploadExcel() {
             const fileInput = document.getElementById('fileUpload');
             const file = fileInput.files[0];
@@ -148,24 +195,30 @@
             const formData = new FormData();
             formData.append('file', file);
 
-            // Simulate file upload (here you'd normally use fetch or AJAX)
-            console.log('Uploading file:', file.name);
-            
-            // Example of sending the file to the server (uncomment for actual usage)
-            // fetch('/upload-endpoint', {
-            //     method: 'POST',
-            //     body: formData
-            // }).then(response => {
-            //     return response.json();
-            // }).then(data => {
-            //     alert('File uploaded successfully!');
-            // }).catch(error => {
-            //     alert('File upload failed.');
-            // });
-
-            alert('File upload simulation complete for ' + file.name);
+            // Make the AJAX request to upload the Excel file
+            $.ajax({
+                headers: {
+                'X-CSRFToken': '{{ csrf_token }}'  // Use Django's CSRF token template tag
+                 },
+                url: 'http://127.0.0.1:8000/api/faculty/uploadfacultylist/',  // Replace with your API endpoint for uploading the file
+                type: 'POST',
+                data: formData,
+                contentType: false,  // Don't set content type, as it's automatically handled by FormData
+                processData: false,  // Don't process the data (FormData handles it)
+                success: function(response) {
+                    // Handle success
+                    //console.log('File uploaded successfully:', response);
+                    alert('File uploaded successfully!');
+                },
+                error: function(error) {
+                    // Handle error
+                   // console.error('Error uploading file:', error);
+                    alert('Error uploading file.');
+                }
+            });
         }
     </script>
 
 </body>
+
 </html>
