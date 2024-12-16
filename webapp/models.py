@@ -47,6 +47,7 @@ class tb_faculty(models.Model):
 class tb_course(models.Model):
     course_code = models.CharField(max_length=45,primary_key=True,default='DEFAULT_CODE')
     course_name = models.CharField(max_length=255)
+    course_description = models.TextField(blank=True, null=True) 
     
     class Meta:
         db_table = 'tb_course'  # The table name in MySQL

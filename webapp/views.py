@@ -7,6 +7,11 @@ from django.utils import timezone
 from django.db import connection
 from rest_framework import status
 import pandas as pd
+from fpdf import FPDF
+import pydf
+from reportlab.lib.pagesizes import letter
+from reportlab.pdfgen import canvas
+import weasyprint
 
 @api_view( ['GET','POST'])
 def add(request):
@@ -160,20 +165,34 @@ def getCourseList(request):
     try:
         # Extract parameters from the GET request query parameters
         faculty_id = request.query_params.get('faculty_id')
-        academic_year = request.query_params.get('academic_year')
+        print(faculty_id) 
+        current_year = datetime.now().year
+        
+        # Assuming academic year is calculated as current year + next year (i.e., 2024-2025 for current year 2024)
+        academic_year = int(str(current_year)[2:] + str(current_year + 1)[2:])  # e.g., 2425 for 2024
+        print(academic_year)
+      #  academic_year = 2425
+        #academic_year = request.query_params.get('academic_year')
 
         # Check if both parameters are provided
         if not faculty_id or not academic_year:
             return Response({
                 "result": False,
                 "message": "Both faculty_id and academic_year are required."
-            }, status=status.HTTP_400_BAD_REQUEST)
+            }, status=status.HTTP_200_OK)
 
         # SQL query to fetch course details
         query = """
-            SELECT course_id, course_name, course_number
-            FROM tb_course
-            WHERE faculty_id = %s AND academic_year = %s
+            SELECT
+            cm.course_code , cs.course_name , cm.faculty_id, cs.course_description
+            FROM
+            tb_course_faculty_mapping cm, tb_course cs 
+            WHERE
+            cm.course_code = cs.course_code
+            AND
+            cm.faculty_id = %s 
+            AND
+            cm.academic_year = %s
         """
 
         # Execute the query using the database connection
@@ -185,9 +204,10 @@ def getCourseList(request):
         courses = []
         for row in rows:
             courses.append({
-                'course_id': row[0],
+                'course_code': row[0],
                 'course_name': row[1],
-                'course_no': row[2]
+                'faculty_id': row[2],
+                'course_description': row[3]
             })
 
         # Response structure
@@ -204,7 +224,7 @@ def getCourseList(request):
         return Response({
             "result": False,
             "message": f"An error occurred: {str(e)}"
-        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        }, status=status.HTTP_200_OK)
 
 @api_view(['GET'])
 def getLessonPlan(request):
@@ -218,7 +238,7 @@ def getLessonPlan(request):
             return Response({
                 "result": False,
                 "message": "Both course_id and academic_year are required."
-            }, status=status.HTTP_400_BAD_REQUEST)
+            }, status=status.HTTP_200_OK)
 
         # SQL query to fetch lesson plan details
         query = """
@@ -257,7 +277,7 @@ def getLessonPlan(request):
         return Response({
             "result": False,
             "message": f"An error occurred: {str(e)}"
-        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        }, status=status.HTTP_200_OK)
     
 
 @api_view(['GET', 'POST'])
@@ -354,7 +374,7 @@ def getFacultyList(request):
         return Response({
             "result": False,
             "message": f"An error occurred: {str(e)}"
-        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        }, status=status.HTTP_200_OK)
 
 @api_view(['GET', 'POST'])
 def uploadCourseFacultyMapping(request):
@@ -484,3 +504,65 @@ def addFacultyRow(request):
                 "result": False,
                 "message": "An error occurred while adding the faculty member."
             })
+        
+@api_view(['PATCH'])
+def addCourseDetails(request):
+    if request.method == 'PATCH':
+        try:
+            # Extract form data from the POST request
+            course_code = request.data.get('course_code', None)
+           # course_name = request.data.get('course_name', None)
+            course_description = request.data.get('course_description', None)
+            
+            # Ensure all fields are provided
+            if not all([course_code,course_description]):
+                return Response({
+                    "result": False,
+                    "message": "All fields are required."
+                })
+
+            # Query to get the max seniority value
+            query_add = "UPDATE tb_course SET course_description = %s WHERE course_code = %s"
+            
+            # Execute the query to get the current max seniority
+            with connection.cursor() as cursor:
+                cursor.execute(query_add,[course_description, course_code])
+            
+            # Return success response
+            return Response({
+                "result": True,
+                "message": "Course updated successfully!"
+            })
+        except Exception as e:
+            # Log and return error response
+            print(f"Error: {e}")
+            return Response({
+                "result": False,
+                "message": "An error occurred while adding course description."
+            })
+        
+@api_view(['POST'])
+def convertToPDF(request):
+   
+   with open('webapp/templates/webapp/sample.html', 'r') as file:
+        html_content = file.read()
+
+    # Create a PDF from the HTML
+   weasyprint.HTML(string=html_content).write_pdf('course_description.pdf')
+
+    
+
+# Call the function to create the PDF
+  
+   return Response({
+                "result": True,
+                "message": "true"
+            })
+   
+
+@api_view(['GET'])
+def getCourseListPage(request):
+      return render(request, 'webapp/addCourseDetails.html', {
+                'result': True,
+                "message":"True."
+        })

@@ -11,5 +11,8 @@ urlpatterns = [
     path('getlessonplan/', views.getLessonPlan, name='getLessonPlan'),
     path('uploadfacultylist/', views.uploadFacultyList, name='uploadFacultyList'),
     path('uploadcoursefacultymapping/', views.uploadCourseFacultyMapping, name='uploadCourseFacultyMapping'),
-    path('getfacultylist/', views.getFacultyList, name='getFacultyList')
+    path('getfacultylist/', views.getFacultyList, name='getFacultyList'),
+    path('addCourseDetails/', views.addCourseDetails, name='addCourseDetails'),
+    path('converttopdf/', views.convertToPDF, name='convertToPDF'),
+    path('getcourselistpage/', views.getCourseListPage, name='getCourseListPage'),
 ]

@@ -62,7 +62,7 @@
                             <!-- Faculty ID -->
                             <div class="col-12 col-md-4 mb-3">
                                 <label class="title">ID</label>
-                                <input type="text" autocomplete="off" class="form-control" name="FacultyID" id="txtFacultyID" placeholder="Enter ID" required>
+                                <input type="text" autocomplete="off" class="form-control" name="FacultyID" id="txtFacultyID" placeholder="Enter ID Eg: MAHE0001" required>
                             </div>
 
                             <!-- Faculty Name -->
@@ -73,7 +73,7 @@
 
                             <!-- Save Button -->
                             <div class="col-12 col-md-4 mb-3">
-                                <a class="btn btn-outline-success" id="btnSave" onclick="javascript:SaveConfirmation(savestudent, 2);">Save</a>
+                                <a class="btn btn-outline-success" id="btnSave" onclick="saveFaculty()">Save</a>
                             </div>
                         </div>
 
@@ -95,13 +95,7 @@
         </div>
 
         <!-- Action Buttons -->
-        <div class="row" style="float: right !important;">
-            <div class="col-12 col-md-12 mb-3">
-                <a class="btn btn-outline-success" id="btnSave" onclick="javascript:SaveConfirmation(savestudent, 2);">Save</a>
-                <a class="btn btn-outline-primary" id="btnCancel" onclick="javascript:CancelConfirmation(2);">Cancel</a>
-                <a class="btn btn-outline-secondary" id="btnExit" onclick="javascript:ExitConfirmation(2); return false;">Exit</a>
-            </div>
-        </div>
+       
 
         <!-- Faculty DataTable Section -->
         <div class="row mt-5">
