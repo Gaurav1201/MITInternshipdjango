@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Course Description</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+            background-color: #f4f4f9;
+            color: #333;
+        }
+        h1 {
+            color: #4CAF50;
+            font-size: 32px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .content {
+            margin: 0 auto;
+            width: 80%;
+        }
+        .course-info {
+            font-size: 18px;
+            margin-bottom: 20px;
+        }
+        .course-info p {
+            line-height: 1.6;
+        }
+        .syllabus {
+            font-size: 16px;
+            line-height: 1.6;
+            margin-top: 20px;
+            padding-top: 10px;
+            border-top: 2px solid #ddd;
+        }
+        .syllabus h2 {
+            font-size: 24px;
+            color: #555;
+            margin-bottom: 10px;
+        }
+        .syllabus ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        .syllabus li {
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="content">
+        <h1>Course Details</h1>
+
+        <div class="course-info">
+            <p><strong>Course Code:</strong> {{ course_code }}</p>
+            <p><strong>Course Name:</strong> {{ course_name }}</p>
+            <p><strong>Course syllabus:</strong> {{ course_description }} Lorem ipsum dolor sit amet consectetur adipisicing elit. Dolor accusantium optio odit fugiat quia placeat dolorum veniam, quidem tempore fuga quibusdam recusandae! Aliquid et veritatis dolores nihil voluptate facilis ipsum.</p>
+        </div>
+
+        
+    </div>
+
+</body>
+</html>

@@ -1,3 +1,4 @@
+from django.http import HttpResponse
 from django.shortcuts import render
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
@@ -545,27 +546,36 @@ def addCourseDetails(request):
         
 @api_view(['POST'])
 def convertToPDF(request):
-   page_name = request.data.get('page_name')
-   description = request.data.get('description')
-   str_page = 'webapp/templates/webapp/'+page_name+'.html'
-   str_page = os.path.join('webapp/templates/webapp', f'{page_name}.html')
-   print(str_page)
-  # html_content = render(request, str_page, {'description': description})
-   html_content = render_to_string(str_page, {'description': description})
-   with open(str_page, 'r') as file:
-        html_content = file.read()
+    # Get data from request
+    #faculty_id = request.data.get('faculty_id')
+    course_code = request.data.get('course_code')
+    course_name = request.data.get('course_name')
+    page_name = request.data.get('page_name')
+    description = request.data.get('description')
 
-    # Create a PDF from the HTML
-   weasyprint.HTML(string=html_content).write_pdf('course_description1.pdf')
-
+    # Render HTML template with the form data
+    html_content = render_to_string('webapp/course_description_template.html', {
+       # 'faculty_id': faculty_id,
+        'course_code': course_code,
+        'course_name': course_name,
+        'course_description': description,
+    })
     
+    # Convert the rendered HTML to PDF using WeasyPrint
+    pdf_file = weasyprint.HTML(string=html_content).write_pdf()
+    
+    # Return the PDF as an HTTP response
+    response = HttpResponse(pdf_file, content_type='application/pdf')
+    response['Content-Disposition'] = 'attachment; filename="course_description.pdf"'
+
+    return response
 
 # Call the function to create the PDF
   
-   return Response({
-                "result": True,
-                "message": "true"
-            })
+#    return Response({
+#                 "result": True,
+#                 "message": "true"
+#             })
    
 
 @api_view(['GET'])

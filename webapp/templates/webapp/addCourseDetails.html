@@ -121,6 +121,11 @@
 
     <!-- JavaScript for API Interaction -->
     <script>
+    // global
+
+        var globalCourseName = "";
+        var globalCourseCode = "";
+        
         const facultyId = localStorage.getItem('faculty_id'); // Replace with the actual faculty ID (dynamic in real implementation)
         const apiUrl = "http://127.0.0.1:8000/api/faculty/getcourselist"; // Replace with your API endpoint
         let selectedCourseId = null;
@@ -140,7 +145,7 @@
                         const button = document.createElement("button");
                         button.className = "btn btn-secondary me-2";
                         button.innerText = course.course_code + '-' + course.course_name;
-                        button.onclick = () => selectCourse(course.course_code, course.course_description);
+                        button.onclick = () => selectCourse(course.course_code, course.course_description, course.course_name);
                         btnGroup.appendChild(button);
                     });
                 } else {
@@ -152,8 +157,10 @@
         }
 
         // Select Course and Update Placeholder
-        function selectCourse(courseId, course_description) {
+        function selectCourse(courseId, course_description, course_name) {
             selectedCourseId = courseId;
+            globalCourseCode = courseId;
+            globalCourseName = course_name;
             document.getElementById("courseDescription").placeholder = `Enter description for ${courseId}...`;
             document.getElementById("courseDescription").innerText = course_description;
             // Update button styles for better UX
@@ -212,6 +219,11 @@
 
         async function generatePdf(pageName){
             try {
+
+                if(globalCourseCode== "" || globalCourseName ==""){
+                    alert("Please select any course")
+                    return 
+                }
                 const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
                 const response = await fetch(`http://127.0.0.1:8000/api/faculty/converttopdf/`, {
                     method: "POST",
@@ -221,6 +233,8 @@
                     },
                     body: JSON.stringify({
                          "page_name":pageName,
+                         "course_code":globalCourseCode,
+                         "course_name":globalCourseName,
                          "description": document.getElementById("courseDescription").value
                     }),
                 });
@@ -229,6 +243,20 @@
                     alert("Course description saved successfully! Please refresh the page");
                     console.log(response)
                     document.getElementById("courseDescription").value = response.description;
+
+                    // pdf thing
+
+
+                    const data = await response.blob(); // Expecting a PDF file in the response
+                    const url = window.URL.createObjectURL(data);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'course_description.pdf'; // PDF filename
+                    document.body.appendChild(a);
+                    a.click();
+                    a.remove();
+
+
                 } else {
                     const errorData = await response.json();
                     alert(`Error saving description: ${errorData.message}`);
