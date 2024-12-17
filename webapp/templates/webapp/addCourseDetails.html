@@ -49,6 +49,7 @@
         .btn-secondary {
             margin: 5px;
         }
+
         /* Animation Styles for the Save Description button */
         .btn-outline-success {
             border: 2px solid #28a745;
@@ -60,13 +61,15 @@
         .btn-outline-success:hover {
             background: #28a745;
             color: #ffffff;
-            transform: scale(1.1); /* Add scale effect on hover */
+            transform: scale(1.1);
+            /* Add scale effect on hover */
         }
 
         .btn-outline-success:active {
-            transform: scale(0.95); /* Shrink effect when clicked */
+            transform: scale(0.95);
+            /* Shrink effect when clicked */
         }
-        
+
         /* Animation for page fade-in */
         body {
             font-family: 'Arial', sans-serif;
@@ -81,11 +84,11 @@
             0% {
                 opacity: 0;
             }
+
             100% {
                 opacity: 1;
             }
         }
-
     </style>
 </head>
 
@@ -112,6 +115,9 @@
     <div class="text-center mt-3">
         <button class="btn btn-outline-success" onclick="saveDescription()">Save Description</button>
     </div>
+    <div class="text-center mt-3">
+        <button class="btn btn-outline-success" onclick="generatePdf('addCourseDetails')">Save Pdf</button>
+    </div>
 
     <!-- JavaScript for API Interaction -->
     <script>
@@ -133,7 +139,7 @@
                     data.courses.forEach(course => {
                         const button = document.createElement("button");
                         button.className = "btn btn-secondary me-2";
-                        button.innerText = course.course_code +'-'+course.course_name;
+                        button.innerText = course.course_code + '-' + course.course_name;
                         button.onclick = () => selectCourse(course.course_code, course.course_description);
                         btnGroup.appendChild(button);
                     });
@@ -187,7 +193,7 @@
                     body: JSON.stringify({
                         "faculty_id": facultyId,
                         "course_code": selectedCourseId,
-                        "course_description":description,
+                        "course_description": description,
                     }),
                 });
 
@@ -203,10 +209,38 @@
             }
         }
 
+
+        async function generatePdf(pageName){
+            try {
+                const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+                const response = await fetch(`http://127.0.0.1:8000/api/faculty/converttopdf/`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRFToken": csrfToken  // CSRF token included here
+                    },
+                    body: JSON.stringify({
+                         "page_name":pageName,
+                         "description": document.getElementById("courseDescription").value
+                    }),
+                });
+
+                if (response.ok) {
+                    alert("Course description saved successfully! Please refresh the page");
+                    console.log(response)
+                    document.getElementById("courseDescription").value = response.description;
+                } else {
+                    const errorData = await response.json();
+                    alert(`Error saving description: ${errorData.message}`);
+                }
+            } catch (error) {
+                console.error("Error saving description:", error);
+            }
+        }
+
         // Initialize UI
         fetchCourses();
     </script>
 </body>
 
 </html>
-

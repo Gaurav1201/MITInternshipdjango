@@ -12,6 +12,8 @@ import pydf
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 import weasyprint
+import os
+from django.template.loader import render_to_string
 
 @api_view( ['GET','POST'])
 def add(request):
@@ -543,12 +545,18 @@ def addCourseDetails(request):
         
 @api_view(['POST'])
 def convertToPDF(request):
-   
-   with open('webapp/templates/webapp/sample.html', 'r') as file:
+   page_name = request.data.get('page_name')
+   description = request.data.get('description')
+   str_page = 'webapp/templates/webapp/'+page_name+'.html'
+   str_page = os.path.join('webapp/templates/webapp', f'{page_name}.html')
+   print(str_page)
+  # html_content = render(request, str_page, {'description': description})
+   html_content = render_to_string(str_page, {'description': description})
+   with open(str_page, 'r') as file:
         html_content = file.read()
 
     # Create a PDF from the HTML
-   weasyprint.HTML(string=html_content).write_pdf('course_description.pdf')
+   weasyprint.HTML(string=html_content).write_pdf('course_description1.pdf')
 
     
 
@@ -562,6 +570,10 @@ def convertToPDF(request):
 
 @api_view(['GET'])
 def getCourseListPage(request):
+    #  return render(request, 'webapp/sample.html', {
+    #             'result': True,
+    #             "message":"True."
+    #     })
       return render(request, 'webapp/addCourseDetails.html', {
                 'result': True,
                 "message":"True."
