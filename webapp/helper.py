@@ -1,8 +1,9 @@
 from datetime import datetime
 from django.db import connection
 from .models import *
-def courseDescriptionHelper(course_code):
-    
+def courseDescriptionHelper(request_data):
+    print("1111111111111111111111111111111111111111111111111111111111111111")
+    print(request_data)
     #query to get all the data of that course
     query = """
     select 
@@ -17,7 +18,7 @@ def courseDescriptionHelper(course_code):
     academic_year = int(str(current_year)[2:] + str(current_year + 1)[2:])  # e.g., 2425 for 2024
     with connection.cursor() as cursor:
        
-        cursor.execute(query, [course_code])
+        cursor.execute(query, [request_data['course_code']])
         rows = cursor.fetchall()
     #print(rows)
     #rows i tuple only has 1 row and 3 cols
@@ -28,17 +29,17 @@ def courseDescriptionHelper(course_code):
     }
     return data
 
-def lessonPlanHelper(course_code, academic_year):
+def lessonPlanHelper(request_data):
     query="""
     select 
-    lesson_id , description, co_num, course_code
+    lesson_id , descrption, co_num, course_code
     from 
     tb_lesson_plan
     where course_code = %s and academic_year = %s
     """
     
     with connection.cursor() as cursor:   
-        cursor.execute(query, [course_code, academic_year])
+        cursor.execute(query, [request_data['course_code'], request_data['academic_year']])
         rows = cursor.fetchall()
     lesson_plan = []
     for row in rows:
@@ -49,4 +50,39 @@ def lessonPlanHelper(course_code, academic_year):
             'co_num': row[2],
             'course_code': row[3],
         })
-    return lesson_plan
+    return {"lesson_plan":lesson_plan}
+
+def courseOutcomesHelper(request_data):
+    query="""
+    select 
+    co_num, description, contact_hours,marks, course_code
+    from 
+    tb_course_outcomes
+    where course_code = %s 
+    """
+        
+     # Assuming academic year is calculated as current year + next year (i.e., 2024-2025 for current year 2024)
+     #not used
+    current_year = datetime.now().year
+    
+    academic_year = int(str(current_year)[2:] + str(current_year + 1)[2:])  # e.g., 2425 for 2024
+    
+    with connection.cursor() as cursor:   
+        cursor.execute(query, [request_data['course_code']])
+        rows = cursor.fetchall()
+    course_outcomes = []
+    total_contact_hours = 0
+    total_marks = 0
+    for row in rows:
+        
+        course_outcomes.append({
+            'co_num': row[0],
+            'description': row[1],
+            'contact_hour': row[2],
+            'marks':int(row[3]),
+            'course_code': row[4],            
+        })
+        total_contact_hours = total_contact_hours + row[2]
+        total_marks = total_marks + int(row[3])
+    print(course_outcomes)
+    return {"course_outcomes":course_outcomes, "total_contact_hours":total_contact_hours, "total_marks":total_marks}

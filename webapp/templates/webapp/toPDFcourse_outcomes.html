@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Course Outcomes Table</title>
+    <style>
+        table {
+            width: 80%;
+            margin: 20px auto;
+            border-collapse: collapse;
+            font-family: Arial, sans-serif;
+        }
+        th, td {
+            border: 1px solid #000;
+            padding: 10px;
+            text-align: center;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .co {
+            text-align: left;
+            font-weight: bold;
+        }
+        .co span {
+            color: red;
+            margin-right: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h2 style="text-align: center;">Course Outcomes (COs)</h2>
+    <table style="width:100%">
+        <tr>
+            <th colspan="2">At the end of the course the student should be able to:</th>
+            <th>No. of Contact Hours</th>
+            <th>Marks</th>
+        </tr>
+        <!-- Loop through each course outcome and render the data dynamically -->
+        {% for outcome in course_outcomes %}
+            <tr>
+                <td>{{ outcome.co_num }}</td>
+                <td>{{ outcome.description }}</td>
+                <td>{{ outcome.contact_hour }}</td>
+                <td>{{ outcome.marks }}</td>
+            </tr>
+        {% endfor %}
+        
+        <!-- Total Row -->
+        <tr>
+            <!-- <th colspan="2" style="text-align: right;">Total</th> -->
+             <td></td>
+             <td>Total</td>
+            <td>{{ total_contact_hours }}</td>
+            <td>{{ total_marks }}</td>
+        </tr>
+    </table>
+</body>
+</html>

@@ -14,17 +14,21 @@
             padding: 8px;
             text-align: left;
         }
+        h1 {
+            text-align: center;  /* This will center the heading */
+            margin: 20px 0;       /* Optional: Add space around the heading */
+        }
     </style>
 </head>
 <body>
-    <h1>Lesson Details</h1>
+    <h1>Lesson Plan</h1>
 
     <table>
         <thead>
             <tr>
-                <th>Lesson ID</th>
-                <th>Description</th>
-                <th>Course Outcome</th>
+                <th>L No</th>
+                <th>Topics</th>
+                <th>Course Outcome Addressed</th>
             </tr>
         </thead>
         <tbody>
@@ -32,7 +36,7 @@
                 <tr>
                     <td>{{ lesson.lesson_id }}</td>
                     <td>{{ lesson.description }}</td>
-                    <td>{{ lesson.course_outcome }}</td>
+                    <td>{{ lesson.co_num }}</td>
                 </tr>
             {% endfor %}
         </tbody>

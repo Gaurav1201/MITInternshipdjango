@@ -19,7 +19,8 @@ from .helper import *
 
 globalFunctionMapper = {
     "course_description": courseDescriptionHelper,
-    "lesson_plan": lessonPlanHelper
+    "lesson_plan": lessonPlanHelper,
+    "course_outcomes": courseOutcomesHelper,
 }
 
 @api_view( ['GET','POST'])
@@ -576,13 +577,13 @@ def convertToPDF(request):
     
     # Get the page name from request.data
     page_name = request.data.get('page_name')
-    str_desti = 'webapp/toPDF'+page_name+'.html'
+    file_dest = 'webapp/toPDF'+page_name+'.html'
     #Call the helper function
     
-    data = courseDescriptionHelper(request.data.get('course_code'))
-    
+   # data = courseDescriptionHelper(request.data.get('course_code'))
+    data = globalFunctionMapper[page_name](request.data)
     print(data)
-    html_content = render_to_string(str_desti, data)
+    html_content = render_to_string(file_dest, data)
     # html_content = render_to_string(str_desti, request.data)
     # html_content = render_to_string('webapp/toPDFcourse_description.html', request.data)
     
@@ -591,7 +592,7 @@ def convertToPDF(request):
     
     # Return the PDF as an HTTP response
     response = HttpResponse(pdf_file, content_type='application/pdf')
-    response['Content-Disposition'] = 'attachment; filename="course_description.pdf"'
+    response['Content-Disposition'] = 'attachment; filename="'+page_name+'.pdf"'
 
     return response
 

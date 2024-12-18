@@ -63,7 +63,7 @@ class tb_course(models.Model):
 #         db_table = 'lessonplan' #anirudhs db schema for lessonplan
 class tb_lesson_plan(models.Model):
     id = models.AutoField(primary_key=True)  # Auto-incrementing primary key
-    lesson_id = models.IntegerField(unique=True)  # Unique lesson_id
+    lesson_id = models.CharField(max_length=10)  # Unique lesson_id
     description = models.CharField(max_length=255)  # Lesson description
     co_num = models.CharField(max_length=5)  # CO number
     course_code = models.CharField(max_length=45)  # Course ID
@@ -109,3 +109,27 @@ class tb_AssessmentPlan(models.Model):
 
     class Meta:
         db_table = 'tb_AssessmentPlan'  # The table name in MySQL
+        
+
+
+class tb_course_outcome(models.Model):
+    # ID field is automatically created as a primary key
+    id = models.BigAutoField(primary_key=True)  # Equivalent to `bigint NOT NULL AUTO_INCREMENT`
+    
+    # Fields mapping to the columns in the SQL table
+    co_num = models.CharField(max_length=5)  # Equivalent to `varchar(255)`
+    description = models.TextField()  # Equivalent to `longtext`
+    contact_hours = models.PositiveIntegerField()  # Equivalent to `int unsigned`
+    marks = models.DecimalField(max_digits=5, decimal_places=2)  # Equivalent to `decimal(5,2)`
+    course_code = models.CharField(max_length=45)
+    # Constraint to check that contact_hours is greater than or equal to 0
+    class Meta:
+        constraints = [
+            models.CheckConstraint(
+                check=models.Q(contact_hours__gte=0),
+                name='contact_hours_gte_0'
+            )
+        ]
+
+    def __str__(self):
+        return self.course_name

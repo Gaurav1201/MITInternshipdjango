@@ -116,7 +116,7 @@
         <button class="btn btn-outline-success" onclick="saveDescription()">Save Description</button>
     </div>
     <div class="text-center mt-3">
-        <button class="btn btn-outline-success" onclick="generatePdf('course_description')">Save Pdf</button>
+        <button class="btn btn-outline-success" onclick="generatePdf('course_outcomes')">Save Pdf</button>
     </div>
 
     <!-- JavaScript for API Interaction -->
@@ -235,7 +235,8 @@
                          "page_name":pageName,
                          "course_code":globalCourseCode,
                          "course_name":globalCourseName,
-                         "description": document.getElementById("courseDescription").value
+                         "description": document.getElementById("courseDescription").value,
+                         "academic_year":2425
                     }),
                 });
 
@@ -256,7 +257,7 @@
                     a.click();
                     a.remove();
 
-
+                    window.location.reload()
                 } else {
                     const errorData = await response.json();
                     alert(`Error saving description: ${errorData.message}`);
