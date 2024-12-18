@@ -54,12 +54,19 @@ class tb_course(models.Model):
 
     def __str__(self):
         return self.course_name
+# class lessonplan(models.Model):
+#     lsid = models.CharField(max_length=20)
+#     descp = models.CharField(max_length=255)
+#     cosn = models.CharField(max_length=20)
+
+#     class Meta:
+#         db_table = 'lessonplan' #anirudhs db schema for lessonplan
 class tb_lesson_plan(models.Model):
     id = models.AutoField(primary_key=True)  # Auto-incrementing primary key
     lesson_id = models.IntegerField(unique=True)  # Unique lesson_id
     description = models.CharField(max_length=255)  # Lesson description
     co_num = models.CharField(max_length=5)  # CO number
-    course_id = models.IntegerField()  # Course ID
+    course_code = models.CharField(max_length=45)  # Course ID
     academic_year = models.IntegerField()
     class Meta:
         db_table = 'tb_lesson_plan'  # The table name in MySQL

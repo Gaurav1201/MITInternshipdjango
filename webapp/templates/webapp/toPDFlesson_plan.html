@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Lesson Table</title>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        table, th, td {
+            border: 1px solid black;
+        }
+        th, td {
+            padding: 8px;
+            text-align: left;
+        }
+    </style>
+</head>
+<body>
+    <h1>Lesson Details</h1>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Lesson ID</th>
+                <th>Description</th>
+                <th>Course Outcome</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for lesson in lesson_plan %}
+                <tr>
+                    <td>{{ lesson.lesson_id }}</td>
+                    <td>{{ lesson.description }}</td>
+                    <td>{{ lesson.course_outcome }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>

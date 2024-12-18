@@ -2,7 +2,7 @@ from django.http import HttpResponse
 from django.shortcuts import render
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from .models import tb_student, tb_faculty, tb_course_faculty_mapping
+from .models import *
 from datetime import datetime
 from django.utils import timezone
 from django.db import connection
@@ -15,6 +15,12 @@ from reportlab.pdfgen import canvas
 import weasyprint
 import os
 from django.template.loader import render_to_string
+from .helper import *
+
+globalFunctionMapper = {
+    "course_description": courseDescriptionHelper,
+    "lesson_plan": lessonPlanHelper
+}
 
 @api_view( ['GET','POST'])
 def add(request):
@@ -544,22 +550,41 @@ def addCourseDetails(request):
                 "message": "An error occurred while adding course description."
             })
         
+        
+#This function is built to reduce the redundancy, instead of creating the api for different page, it uses only 1 appi which takes the data to be printed 
+# and the name of the page, it will then map the page name with a pre defined dictionary which will then redirected to the secified page with the data
+#this way you dont need to have many apis
 @api_view(['POST'])
 def convertToPDF(request):
+   # print(request.data)
     # Get data from request
     #faculty_id = request.data.get('faculty_id')
-    course_code = request.data.get('course_code')
-    course_name = request.data.get('course_name')
-    page_name = request.data.get('page_name')
-    description = request.data.get('description')
+    # course_code = request.data.get('course_code')
+    # course_name = request.data.get('course_name')
+    # page_name = request.data.get('page_name')
+    # description = request.data.get('description')
 
     # Render HTML template with the form data
-    html_content = render_to_string('webapp/course_description_template.html', {
-       # 'faculty_id': faculty_id,
-        'course_code': course_code,
-        'course_name': course_name,
-        'course_description': description,
-    })
+    # html_content = render_to_string('webapp/toPDFcourse_description.html', {
+    #    # 'faculty_id': faculty_id,
+    #     'course_code': course_code,
+    #     'course_name': course_name,
+    #     'course_description': description,
+    # })
+    
+    # Render HTML template with the form data
+    
+    # Get the page name from request.data
+    page_name = request.data.get('page_name')
+    str_desti = 'webapp/toPDF'+page_name+'.html'
+    #Call the helper function
+    
+    data = courseDescriptionHelper(request.data.get('course_code'))
+    
+    print(data)
+    html_content = render_to_string(str_desti, data)
+    # html_content = render_to_string(str_desti, request.data)
+    # html_content = render_to_string('webapp/toPDFcourse_description.html', request.data)
     
     # Convert the rendered HTML to PDF using WeasyPrint
     pdf_file = weasyprint.HTML(string=html_content).write_pdf()

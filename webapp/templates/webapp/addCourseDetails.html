@@ -116,7 +116,7 @@
         <button class="btn btn-outline-success" onclick="saveDescription()">Save Description</button>
     </div>
     <div class="text-center mt-3">
-        <button class="btn btn-outline-success" onclick="generatePdf('addCourseDetails')">Save Pdf</button>
+        <button class="btn btn-outline-success" onclick="generatePdf('course_description')">Save Pdf</button>
     </div>
 
     <!-- JavaScript for API Interaction -->
@@ -240,7 +240,7 @@
                 });
 
                 if (response.ok) {
-                    alert("Course description saved successfully! Please refresh the page");
+                    alert("Course description pdf will be generated now");
                     console.log(response)
                     document.getElementById("courseDescription").value = response.description;
 
