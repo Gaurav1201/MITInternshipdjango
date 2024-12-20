@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>MIT</title>
+    <style>
+        body {
+            font-family: "Times New Roman", Times, serif;
+            margin: 0;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        table {
+            width: auto;
+            margin-left: 0;
+            border-collapse: collapse;
+            table-layout: fixed;
+        }
+
+        table,
+        th,
+        td {
+            border: 1px solid black;
+        }
+
+        th,
+        td {
+            padding: 8px;
+            text-align: left;
+        }
+
+        /* Style for rotating the table headers vertically (90 degrees clockwise) */
+        th {
+            writing-mode: vertical-lr; /* This rotates the text to be vertical */
+            white-space: nowrap; /* Prevents wrapping of header text */
+            text-align: center; /* Centers the text in the header */
+            height: 100px; /* Optional: Increase the height of the headers to fit the text */
+        }
+
+        /* Optional: Reduce space between table rows */
+        tr {
+            height: 35px;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Course Articulation</h1>
+
+    <table>
+        <thead>
+            <tr>
+                <th>CO/PO</th>
+                <th>PO1</th>
+                <th>PO2</th>
+                <th>PO3</th>
+                <th>PO4</th>
+                <th>PO5</th>
+                <th>PO6</th>
+                <th>PO7</th>
+                <th>PO8</th>
+                <th>PO9</th>
+                <th>P10</th>
+                <th>P11</th>
+                <th>P12</th>
+                <th>PSO1</th>
+                <th>PS02</th>
+                <th>PS03</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for data in dataObject %}
+            <tr>
+                <td>{{ data.CO_PO }}</td>
+                <td>{{ data.PO1 }}</td>
+                <td>{{ data.PO2 }}</td>
+                <td>{{ data.PO3 }}</td>
+                <td>{{ data.PO4 }}</td>
+                <td>{{ data.PO5 }}</td>
+                <td>{{ data.PO6 }}</td>
+                <td>{{ data.PO7 }}</td>
+                <td>{{ data.PO8 }}</td>
+                <td>{{ data.PO9 }}</td>
+                <td>{{ data.PO10 }}</td>
+                <td>{{ data.PO11 }}</td>
+                <td>{{ data.PO12 }}</td>
+                <td>{{ data.PSO1 }}</td>
+                <td>{{ data.PSO2 }}</td>
+                <td>{{ data.PSO3 }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+
+</html>

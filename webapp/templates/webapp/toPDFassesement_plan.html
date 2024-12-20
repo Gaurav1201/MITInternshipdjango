@@ -24,22 +24,26 @@
     </style>
 </head>
 <body>
-    <h1>Lesson Plan</h1>
+    <h1>Assement Plan</h1>
 
     <table>
         <thead>
             <tr>
-                <th>L No</th>
-                <th>Topics</th>
-                <th>Course Outcome Addressed</th>
+                <th>Components</th>
+                <th>Mid Sem Exam</th>
+                <th>Flexible Assements
+                    (2-3 in number).
+                </th>
+                <th>End semester/Makeup examination</th>
             </tr>
         </thead>
         <tbody>
-            {% for lesson in lesson_plan %}
+            {% for data in a_plan %}
                 <tr>
-                    <td>{{ lesson.lesson_id }}</td>
-                    <td>{{ lesson.description }}</td>
-                    <td>{{ lesson.co_num }}</td>
+                    <td>{{ data.component }}</td>
+                    <td>{{ data.mid_sem_exam }}</td>
+                    <td>{{ data.flexible_asssement }}</td>
+                    <td>{{data.end_semester_exam }}</td>
                 </tr>
             {% endfor %}
         </tbody>

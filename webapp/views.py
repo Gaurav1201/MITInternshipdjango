@@ -1,4 +1,4 @@
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
@@ -16,11 +16,17 @@ import weasyprint
 import os
 from django.template.loader import render_to_string
 from .helper import *
+from django.db.models  import Max, F
+
+from .serializers import CourseOutcomeSerializer
 
 globalFunctionMapper = {
     "course_description": courseDescriptionHelper,
     "lesson_plan": lessonPlanHelper,
     "course_outcomes": courseOutcomesHelper,
+    "assesement_plan": assesementPlanHelper,
+    "references": referencesHelper,
+    "course_articulation": articulationHelper
 }
 
 @api_view( ['GET','POST'])
@@ -289,69 +295,107 @@ def getLessonPlan(request):
             "message": f"An error occurred: {str(e)}"
         }, status=status.HTTP_200_OK)
     
-
-@api_view(['GET', 'POST'])
+@api_view(['POST', 'GET'])
 def uploadFacultyList(request):
     if request.method == 'POST':
         try:
             # Get the uploaded file
             excel_file = request.FILES['file']
-            print(excel_file)
+            print(f"Received file: {excel_file.name}")
 
             # Check if the file has the correct extension
-            if not excel_file.name.endswith('.xlsx') and not excel_file.name.endswith('.xls'):
-                return render(request, 'webapp/facultyExcelUpload.html', {
+            if not excel_file.name.endswith(('.xlsx', '.xls')):
+                return JsonResponse({
                     "result": False,
-                    "message": "File not proper"
+                    "message": "Invalid file format. Please upload an Excel file."
                 })
 
-            # Use pandas to read the Excel file (openpyxl is used under the hood)
+            # Use pandas to read the Excel file
             df = pd.read_excel(excel_file)
-            print(df)
+            print(f"Data read from Excel: {df}")
 
-            # Loop through the rows of the DataFrame and save to the database
+            # Initialize variables to store error and success information
+            existing_faculty_ids = set(tb_faculty.objects.values_list('faculty_id', flat=True))
+            error_rows = []  # List to track existing faculty IDs
+            uploaded_rows = []  # List to track successfully uploaded records
+
+            used_seniorities = set(tb_faculty.objects.values_list('seniority', flat=True))
+
+            # Loop through the rows of the DataFrame
             for index, row in df.iterrows():
                 # Extract data from the row
                 seniority = row.get('Sl.No')
-                id = row.get('ID')
-                faculty_name = row.get('Name of the Faculty', '')  # Default empty string if not present
-                faculty_designation = row.get('Designation', '')  # Default empty string if not present
+                faculty_id = row.get('ID')
+                faculty_name = row.get('Name of the Faculty', '')
+                faculty_designation = row.get('Designation', '')
 
-                # Create a new student record in the database
-                tb_faculty.objects.create(
-                    seniority=seniority,
-                    faculty_id=id,
-                    faculty_name=faculty_name,
-                    faculty_password="Manipal@123",
-                    role_id=1,
-                    designation = faculty_designation
-                )
+                # Skip if faculty_id or seniority is missing or invalid
+                if pd.isna(faculty_id) or pd.isna(seniority):
+                    continue
 
-            return render(request, 'webapp/facultyExcelUpload.html', {
+                conflicting_records = tb_faculty.objects.filter(seniority__gte=seniority).order_by('seniority')
+
+                if conflicting_records.exists():
+                # Step 2: Shift the seniority of existing records in ascending order
+                    for record in conflicting_records:
+                    # Only increment seniority if the record's seniority is >= excel_seniority
+                        if record.seniority >= seniority:
+                            record.seniority += 1
+                            record.save()
+
+
+
+                # Check if the faculty ID already exists
+                if faculty_id in existing_faculty_ids:
+                    # If the faculty ID exists, add to the error list
+                    error_rows.append(faculty_id)
+                else:
+                    # If faculty ID does not exist, add to the database and track success
+                    tb_faculty.objects.create(
+                        seniority=seniority,
+                        faculty_id=faculty_id,
+                        faculty_name=faculty_name,
+                        faculty_password="Manipal@123",  # Default password
+                        role_id=1,
+                        designation=faculty_designation
+                    )
+                    uploaded_rows.append(faculty_id)
+
+                used_seniorities.add(seniority)
+
+            # Prepare messages based on the result
+            if error_rows:
+                error_message = f"Some faculty IDs already exist in the database:\n" + "\n".join(map(str, error_rows))
+                success_message = f"{len(uploaded_rows)} records successfully uploaded!"
+                return JsonResponse({
+                    "result": False,
+                    "message": error_message + "\n\n" + success_message
+                })
+
+            success_message = f"Successfully uploaded {len(uploaded_rows)} records!"
+            return JsonResponse({
                 "result": True,
-                "message": "Data successfully uploaded!"
+                "message": success_message
             })
 
         except Exception as e:
+            # Print the error and traceback
             print(f"Error: {e}")
-            return render(request, 'webapp/facultyExcelUpload.html', {
+            return JsonResponse({
                 "result": False,
-                "message": "Error occurred while uploading the file."
+                "message": f"An error occurred while uploading the file: {str(e)}"
             })
     else:
-        return render(request, 'webapp/facultyExcelUpload.html')
-    
-
+        return render(request, "webapp/facultyExcelUpload.html")
 
 
 
 @api_view(['GET'])
 def getFacultyList(request):
     try:
-        
-        # SQL query to fetch course details
+        # SQL query to fetch faculty details
         query = """
-            SELECT faculty_id, faculty_name, designation
+            SELECT seniority, faculty_id, faculty_name, designation
             FROM tb_faculty
             ORDER BY seniority
         """
@@ -365,9 +409,10 @@ def getFacultyList(request):
         faculty_list = []
         for row in rows:
             faculty_list.append({
-                'faculty_id': row[0],
-                'faculty_name': row[1],
-                'designation': row[2]
+                'seniority': row[0],
+                'faculty_id': row[1],
+                'faculty_name': row[2],
+                'designation': row[3]
             })
 
         # Response structure
@@ -385,6 +430,65 @@ def getFacultyList(request):
             "result": False,
             "message": f"An error occurred: {str(e)}"
         }, status=status.HTTP_200_OK)
+
+@api_view(['POST'])
+def addFacultyRow(request):
+    if request.method == 'POST':
+        try:
+            # Extract form data
+            faculty_id = request.POST.get('facultyID', None)
+            faculty_name = request.POST.get('facultyName', None)
+            designation = request.POST.get('designation', None)
+            seniority = request.POST.get('seniority', None)
+
+            # Ensure required fields are provided
+            if not all([faculty_id, faculty_name, designation, seniority]):
+                return JsonResponse({
+                    "result": False,
+                    "message": "All fields (Faculty ID, Name, Designation, Seniority) are required."
+                })
+
+            # Check if the faculty ID already exists
+            if tb_faculty.objects.filter(faculty_id=faculty_id).exists():
+                return JsonResponse({
+                    "result": False,
+                    "message": f"Faculty ID '{faculty_id}' already exists in the database."
+                })
+
+            # Additional seniority validation (if applicable)
+            max_seniority = tb_faculty.objects.aggregate(Max('seniority'))['seniority__max'] or 0
+            if int(seniority) > max_seniority + 1:
+                return JsonResponse({
+                    "result": False,
+                    "message": f"Seniority can't exceed {max_seniority + 1}."
+                })
+
+            # Update seniority of existing records
+            tb_faculty.objects.filter(seniority__gte=int(seniority)).update(
+                seniority=F('seniority') + 1
+            )
+
+            # Create the new faculty record
+            tb_faculty.objects.create(
+                faculty_id=faculty_id,
+                faculty_name=faculty_name,
+                designation=designation,
+                seniority=seniority,
+                faculty_password="Manipal@123",  # Default password
+                role_id=2  # Assuming role_id is 2 for non-admin faculty
+            )
+
+            return JsonResponse({
+                "result": True,
+                "message": "Faculty member added successfully."
+            })
+
+        except Exception as e:
+            print(f"Error: {e}")
+            return JsonResponse({
+                "result": False,
+                "message": "An error occurred while adding the faculty member."
+            })
 
 @api_view(['GET', 'POST'])
 def uploadCourseFacultyMapping(request):
@@ -557,7 +661,7 @@ def addCourseDetails(request):
 #this way you dont need to have many apis
 @api_view(['POST'])
 def convertToPDF(request):
-   # print(request.data)
+    print(request.data)
     # Get data from request
     #faculty_id = request.data.get('faculty_id')
     # course_code = request.data.get('course_code')
@@ -614,3 +718,197 @@ def getCourseListPage(request):
                 'result': True,
                 "message":"True."
         })
+      
+@api_view(['GET'])
+def getPdfPage(request):
+    
+    return render(request, 'webapp/generatePDF.html', {
+                'result': True,
+                "message":"True."
+        })
+    
+
+@api_view(['GET'])
+def getCourseOutcomesPage(request):
+    return render(request, 'courses/course_outcome.html')  # Render form template for GET requests
+
+
+@api_view(['POST'])
+def add_course_outcome_api(request):
+    if request.method == 'POST':
+        serializer = CourseOutcomeSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({'message': 'Course outcome added successfully'}, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+@api_view(['PUT'])
+def updateCourseOutcome(request,id):
+    try:
+        # Get parameters from the request
+        # id = request.query_params.get('id')
+        contact_hours = request.data.get('contact_hours')
+        marks = request.data.get('marks')
+
+        if not id or contact_hours is None or marks is None:
+            return Response({"result": False, "message": "Missing required parameters"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Update query
+        query = "UPDATE tb_course_outcomes SET contact_hours = %s, marks = %s WHERE id = %s"
+
+        with connection.cursor() as cursor:
+            cursor.execute(query, [contact_hours, marks, id])
+            rows = cursor.fetchall()
+
+        if rows:
+            return Response({"result": False, "message": "Course outcome not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        # Return success response
+        result = {
+            "result": True,
+            "message": "Updated successfully",
+        }
+
+        return Response(result, status=status.HTTP_200_OK)
+
+    except Exception as e:
+        # Log the exception (optional)
+        print(f"Error occurred: {e}")
+        
+        # Return error response
+        return Response({"result": False, "message": f"An error occurred: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
+    
+
+@api_view(['GET'])
+def getAssementPlanPage(request):
+    return render(request, 'webapp/assement_planMTech.html')
+    if request.query_params.get('programme') == 'BTech':
+        return render(request, 'webapp/assement_planBTech.html')  # Render form template for GET requests
+    else:
+        return render(request, 'webapp/assement_planMTech.html')  # Render form template for GET requests
+
+@api_view(['GET'])
+def getCourseOutcomes(request):
+    try:
+        # Get faculty ID and role ID
+        faculty_id = request.query_params.get('faculty_id')
+        role_id = request.query_params.get('role_id')
+        print(role_id)
+        print(faculty_id)
+        
+        whereClause = ' WHERE 1=1 '
+        if role_id == '2' or role_id=='3':  # Ensure role_id is compared as a string
+            # Sanitize faculty_id to prevent SQL injection
+            faculty_id = str(faculty_id).replace("'", "''")
+            whereClause = f" WHERE course_code IN (SELECT course_code FROM tb_course_faculty_mapping WHERE faculty_id = '{faculty_id}')"
+        
+        # Construct the query
+        query = f"""
+            SELECT co_num, description, contact_hours, marks, program_outcomes, program_spec_outcomes, bl, course_code,id
+            FROM tb_course_outcomes
+            {whereClause}
+            ORDER BY id
+        """
+
+        # Execute the query using the database connection
+        with connection.cursor() as cursor:
+            cursor.execute(query)
+            rows = cursor.fetchall()
+
+        # Debugging: Print the fetched rows
+      #  print("Fetched rows:", rows)
+
+        # Prepare the response data
+        course_outcome = []
+
+        for row in rows:
+            course_outcome.append({
+                'co_num': row[0],
+                'description': row[1],
+                'contact_hours': row[2],
+                'marks': row[3],
+                'program_outcomes': row[4],
+                'program_spec_outcomes': row[5],
+                'bl': row[6],
+                'course_code': row[7],
+                'id':row[8]
+            })
+        print(course_outcome)
+        # Response structure
+        result = {
+            "result": True,
+            "message": "Fetched successfully",
+            "course_outcome": course_outcome
+        }
+
+        return Response(result, status=status.HTTP_200_OK)
+
+    except Exception as e:
+        # Debugging: Log the exception
+        print("Error occurred:", str(e))
+        return Response({
+            "result": False,
+            "message": f"An error occurred: {str(e)}"
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['GET'])
+def getAssementPlan(request):
+    
+    try:
+    # Get programme and course codeID
+        #programme = request.query_params.get('programme')
+        # if programme == "MTech":
+        #     table_name = 'tb_AssessmentPlanMtech'
+        # else:
+        #     table_name = "tb_AssementPlanBTech"
+        table_name = "tb_AssesmentPlanMTech"
+        course_code = request.query_params.get('course_code','CSE5117')
+        query=f"""
+        select 
+        component, mid_sem_exam,flexible_assessments,end_semester_exam, ap_id
+        from 
+        {table_name}
+        where course_code = %s 
+        """
+        
+     # Assuming academic year is calculated as current year + next year (i.e., 2024-2025 for current year 2024)
+     #not used
+        current_year = datetime.now().year
+    
+        academic_year = int(str(current_year)[2:] + str(current_year + 1)[2:])  # e.g., 2425 for 2024
+    
+        with connection.cursor() as cursor:   
+            cursor.execute(query, [course_code])
+            rows = cursor.fetchall()
+        a_plan = []
+   
+        for row in rows:
+        
+            a_plan.append({
+            'component': row[0],
+            'mid_sem_exam': row[1],
+            'flexible_asssement': row[2],
+            'end_semester_exam':row[3],
+            'id':row[4]
+                      
+        })        # Response structure
+        print(a_plan)
+        result = {
+            "result": True,
+            "message": "Fetched successfully",
+            "a_plan": a_plan
+        }
+
+        return Response(result, status=status.HTTP_200_OK)
+
+    except Exception as e:
+        # Debugging: Log the exception
+        print("Error occurred:", str(e))
+        return Response({
+            "result": False,
+            "message": f"An error occurred: {str(e)}"
+        }, status=status.HTTP_200_OK)
+

@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dropdown with AJAX</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <meta name="csrf-token" content="{{ csrf_token }}">
+
+</head>
+
+<body>
+
+    <h1>Select an Option</h1>
+    
+
+    <!-- Dropdown and Submit Button -->
+   
+        <label for="drpPage">Choose an option:</label>
+        <select id="drpPage" name="dropdown">
+            <option value="course_description">Course Description</option>
+            <option value="lesson_plan">Lesson Plan</option>
+            <option value="assesement_plan">Assesement Plan</option>
+            <option value="references">references</option>
+            <option value="course_articulation">Articulation</option>
+            
+        </select>
+        <button  onclick="generatePdf()">Submit</button>
+    
+
+    <p id="response"></p> <!-- Display the response here -->
+
+    <script>
+        globalCourseCode = 'CSE5117'
+        globalCourseName = 'SNS'
+        async function generatePdf() {
+            try {
+                console.log(111111111111111)
+                if (globalCourseCode == "" || globalCourseName == "") {
+                    alert("Please select any course")
+                    return
+                }
+                const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+                const response = await fetch(`http://127.0.0.1:8000/api/faculty/converttopdf/`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRFToken": csrfToken  // CSRF token included here
+                    },
+                    body: JSON.stringify({
+                        "page_name": $("#drpPage").val(),
+                        "course_code": globalCourseCode,
+                        "course_name": globalCourseName,
+                        "academic_year":2425
+                    }),
+                });
+
+                if (response.ok) {
+                    alert("Course description pdf will be generated now");
+                    console.log(response)
+                  //  document.getElementById("courseDescription").value = response.description;
+
+                    // pdf thing
+                    const data = await response.blob(); // Expecting a PDF file in the response
+                    const url = window.URL.createObjectURL(data);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = $("#drpPage").val() + '.pdf'; // PDF filename
+                    document.body.appendChild(a);
+                    a.click();
+                    a.remove();
+
+                    window.location.reload()
+                } else {
+                    const errorData = await response.json();
+                    alert(`Error saving description: ${errorData.message}`);
+                }
+            } catch (error) {
+                console.error("Error saving description:", error);
+            }
+        }
+
+        // jQuery AJAX setup
+    </script>
+
+</body>
+
+</html>

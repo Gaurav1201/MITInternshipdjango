@@ -116,7 +116,7 @@
         <button class="btn btn-outline-success" onclick="saveDescription()">Save Description</button>
     </div>
     <div class="text-center mt-3">
-        <button class="btn btn-outline-success" onclick="generatePdf('course_outcomes')">Save Pdf</button>
+        <button class="btn btn-outline-success" onclick="generatePdf('references')">Save Pdf</button>
     </div>
 
     <!-- JavaScript for API Interaction -->
@@ -252,7 +252,7 @@
                     const url = window.URL.createObjectURL(data);
                     const a = document.createElement('a');
                     a.href = url;
-                    a.download = 'course_description.pdf'; // PDF filename
+                    a.download = pageName+'.pdf'; // PDF filename
                     document.body.appendChild(a);
                     a.click();
                     a.remove();

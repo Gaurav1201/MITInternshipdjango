@@ -9,10 +9,18 @@ urlpatterns = [
 
     path('getcourselist/', views.getCourseList, name='getCourseList'),
     path('getlessonplan/', views.getLessonPlan, name='getLessonPlan'),
+    path('addfacultyrow/', views.addFacultyRow, name='addFacultyRow'),
     path('uploadfacultylist/', views.uploadFacultyList, name='uploadFacultyList'),
     path('uploadcoursefacultymapping/', views.uploadCourseFacultyMapping, name='uploadCourseFacultyMapping'),
     path('getfacultylist/', views.getFacultyList, name='getFacultyList'),
     path('addCourseDetails/', views.addCourseDetails, name='addCourseDetails'),
     path('converttopdf/', views.convertToPDF, name='convertToPDF'),
     path('getcourselistpage/', views.getCourseListPage, name='getCourseListPage'),
+    path('getpdfpage/', views.getPdfPage, name='getPdfPage'),
+    path('getCourseOutcomes/', views.getCourseOutcomes, name='getCourseOutcomes'),
+    path('getCourseOutcomesPage/', views.getCourseOutcomesPage, name='getCourseOutcomesPage'),
+    path('add_course_outcome/', views.add_course_outcome_api, name='add_course_outcome_api'),
+    path('updateCourseOutcome/<int:id>/', views.updateCourseOutcome, name='updateCourseOutcome'),
+    path('getassementplanpage/', views.getAssementPlanPage, name='getAssementPlanPage'),
+    path('getassementplan/', views.getAssementPlan, name='getAssementPlan'),
 ]

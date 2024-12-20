@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Lesson Table</title>
+    <title>MIT</title>
     <style>
         table {
             width: 100%;
@@ -18,28 +18,23 @@
             text-align: center;  /* This will center the heading */
             margin: 20px 0;       /* Optional: Add space around the heading */
         }
+
         body {
             font-family: "Times New Roman", Times, serif;
         }
     </style>
 </head>
 <body>
-    <h1>Lesson Plan</h1>
+    <h1>References</h1>
 
     <table>
-        <thead>
-            <tr>
-                <th>L No</th>
-                <th>Topics</th>
-                <th>Course Outcome Addressed</th>
-            </tr>
-        </thead>
+        
         <tbody>
-            {% for lesson in lesson_plan %}
+            {% for data in dataObject %}
                 <tr>
-                    <td>{{ lesson.lesson_id }}</td>
-                    <td>{{ lesson.description }}</td>
-                    <td>{{ lesson.co_num }}</td>
+                    <td>{{ data.slno }}.</td>
+                    <td>{{ data.reference }}</td>
+                   
                 </tr>
             {% endfor %}
         </tbody>

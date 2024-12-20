@@ -48,7 +48,13 @@ class tb_course(models.Model):
     course_code = models.CharField(max_length=45,primary_key=True,default='DEFAULT_CODE')
     course_name = models.CharField(max_length=255)
     course_description = models.TextField(blank=True, null=True) 
-    
+    course_references = models.CharField(max_length=255)
+    course_programme = models.CharField(max_length=45)
+    course_sem = models.IntegerField()
+    lecture_hour = models.IntegerField(default=3)
+    tutorial_hour = models.IntegerField(default=1)
+    p = models.IntegerField(default=3)
+    c = models.IntegerField(default=4)
     class Meta:
         db_table = 'tb_course'  # The table name in MySQL
 
@@ -132,4 +138,46 @@ class tb_course_outcome(models.Model):
         ]
 
     def __str__(self):
-        return self.course_name
+        return self.id
+    
+class tb_course_articulation(models.Model):
+    CO_PO = models.CharField(max_length=10)  # Corresponds to varchar(10)
+    PO1 = models.IntegerField(null=True, blank=True)  # Corresponds to int
+    PO2 = models.IntegerField(null=True, blank=True)
+    PO3 = models.IntegerField(null=True, blank=True)
+    PO4 = models.IntegerField(null=True, blank=True)
+    PO5 = models.IntegerField(null=True, blank=True)
+    PO6 = models.IntegerField(null=True, blank=True)
+    PO7 = models.IntegerField(null=True, blank=True)
+    PO8 = models.IntegerField(null=True, blank=True)
+    PO9 = models.IntegerField(null=True, blank=True)
+    PO10 = models.IntegerField(null=True, blank=True)
+    PO11 = models.IntegerField(null=True, blank=True)
+    PO12 = models.IntegerField(null=True, blank=True)
+    PSO1 = models.IntegerField(null=True, blank=True)
+    PSO2 = models.IntegerField(null=True, blank=True)
+    PSO3 = models.IntegerField(null=True, blank=True)
+    course_code = models.CharField(max_length=45)
+    def __str__(self):
+        return self.CO_PO
+
+class tb_course_outcomes(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    co_num = models.CharField(max_length=255)
+    description = models.TextField()
+    contact_hours = models.PositiveIntegerField()  # Ensures non-negative integers
+    marks = models.IntegerField()
+    program_outcomes = models.CharField(max_length=15)
+    program_spec_outcomes = models.CharField(max_length=50)
+    learning_outcomes = models.CharField(max_length=20)
+    bl = models.CharField(max_length=10)
+    course_code = models.CharField(max_length=45)
+
+    class Meta:
+        db_table = 'tb_course_outcomes'  # Optional: matches the table name in the database
+        constraints = [
+            models.CheckConstraint(check=models.Q(contact_hours__gte=0), name='tb_course_outcomes_chk_1'),
+        ]
+
+    def __str__(self):
+        return f"{self.co_num}: {self.description[:50]}..."  # Truncate for readability
